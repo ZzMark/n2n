@@ -18,9 +18,28 @@ jobs:
       env:
         LDFLAGS: -L/usr/local/opt/openssl@1.1/lib
         CPPFLAGS: -I/usr/local/opt/openssl@1.1/include
-    - name: Create a Release
-      uses: elgohr/Github-Release-Action@master
+    - name: package
+      run: zip mac.zip edge supernode
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        args: ${{ github.sha }}
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: false
+        prerelease: false
+    - name: Upload a Release Asset
+      uses: actions/upload-release-asset@v1.0.2
+      with:
+        # The URL for uploading assets to the release
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        # The path to the asset you want to upload
+        asset_path: ./mac.zip
+        asset_name: mac.zip
+        asset_content_type: application/zip
