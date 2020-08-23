@@ -29,12 +29,15 @@ jobs:
     needs: ['create-release']
     steps:
     - uses: actions/checkout@v2
+    - uses: warrenbuckley/Setup-MSBuild
     - name: make
       run: |
         md build
         cd build
         cmake ..
         MSBuild edge.vcxproj /t:Build /p:Configuration=Release
+    - name: release test
+      run: echo ${{ needs.create-release.outputs.upload_url }}
     # - name: package
     #   run: zip win.zip edge supernode
     # - name: Upload a Release Asset
