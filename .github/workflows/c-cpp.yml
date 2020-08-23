@@ -7,19 +7,9 @@ on:
     branches: [ dev ]
 
 jobs:
-  build:
-    runs-on: macos-10.15
+  create-release:
+    runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
-    - name: install requirement
-      run: brew install automake pkg-config openssl
-    - name: make
-      run: ./autogen.sh && make
-      env:
-        LDFLAGS: -L/usr/local/opt/openssl@1.1/lib
-        CPPFLAGS: -I/usr/local/opt/openssl@1.1/include
-    - name: package
-      run: zip mac.zip edge supernode
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -34,14 +24,65 @@ jobs:
           - Second Change
         draft: false
         prerelease: false
-    - name: Upload a Release Asset
-      uses: actions/upload-release-asset@v1.0.2
-      with:
-        # The URL for uploading assets to the release
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        # The path to the asset you want to upload
-        asset_path: ./mac.zip
-        asset_name: mac.zip
-        asset_content_type: application/zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-win:
+    runs-on: windows-2019
+    needs: ['create-release']
+    steps:
+    - uses: actions/checkout@v2
+    - name: make
+      run: |
+        md build
+        cd build
+        cmake ..
+        MSBuild edge.vcxproj /t:Build /p:Configuration=Release
+    # - name: package
+    #   run: zip win.zip edge supernode
+    # - name: Upload a Release Asset
+    #   uses: actions/upload-release-asset@v1.0.2
+    #   with:
+    #     # The URL for uploading assets to the release
+    #     upload_url: ${{ needs.create-release.outputs.upload_url }}
+    #     # The path to the asset you want to upload
+    #     asset_path: ./win.zip
+    #     asset_name: win.zip
+    #     asset_content_type: application/zip
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # build-mac:
+  #   runs-on: macos-10.15
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: install requirement
+  #     run: brew install automake pkg-config openssl
+  #   - name: make
+  #     run: ./autogen.sh && make
+  #     env:
+  #       LDFLAGS: -L/usr/local/opt/openssl@1.1/lib
+  #       CPPFLAGS: -I/usr/local/opt/openssl@1.1/include
+  #   - name: package
+  #     run: zip mac.zip edge supernode
+  #   - name: Create Release
+  #     id: create_release
+  #     uses: actions/create-release@v1
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+  #     with:
+  #       tag_name: ${{ github.ref }}
+  #       release_name: Release ${{ github.ref }}
+  #       body: |
+  #         Changes in this Release
+  #         - First Change
+  #         - Second Change
+  #       draft: false
+  #       prerelease: false
+  #   - name: Upload a Release Asset
+  #     uses: actions/upload-release-asset@v1.0.2
+  #     with:
+  #       # The URL for uploading assets to the release
+  #       upload_url: ${{ steps.create_release.outputs.upload_url }}
+  #       # The path to the asset you want to upload
+  #       asset_path: ./mac.zip
+  #       asset_name: mac.zip
+  #       asset_content_type: application/zip
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
